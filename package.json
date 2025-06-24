@@ -1,0 +1,23 @@
+{
+  "name": "bikefriendly-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Chicago Bike-Friendly Business Map",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "import": "node scripts/import-csv.js"
+  },
+  "keywords": ["chicago", "bike-friendly", "business", "map", "api"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "csv-parser": "^3.2.0",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.1",
+    "node-cache": "^5.1.2",
+    "pg": "^8.16.2"
+  }
+}

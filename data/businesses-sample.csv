@@ -1,0 +1,5 @@
+name,latitude,longitude,category,phone,url,is_sponsored
+Bike Shop Chicago,41.8781,-87.6298,bike_shop,312-555-0123,https://bikeshopchicago.com,false
+River Trail Cafe,41.8869,-87.6441,cafe,312-555-0124,https://rivertrailcafe.com,true
+West Loop Cycles,41.8796,-87.6370,bike_shop,312-555-0125,,false
+Lincoln Park Brewery,41.9264,-87.6471,restaurant,312-555-0126,https://lpbrewery.com,false
