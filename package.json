@@ -6,9 +6,16 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "import": "node scripts/import-csv.js"
+    "import": "node scripts/import-csv.js",
+    "test": "jest"
   },
-  "keywords": ["chicago", "bike-friendly", "business", "map", "api"],
+  "keywords": [
+    "chicago",
+    "bike-friendly",
+    "business",
+    "map",
+    "api"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -19,5 +26,9 @@
     "express-rate-limit": "^7.5.1",
     "node-cache": "^5.1.2",
     "pg": "^8.16.2"
+  },
+  "devDependencies": {
+    "jest": "^30.0.3",
+    "supertest": "^7.1.1"
   }
 }
