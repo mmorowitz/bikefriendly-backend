@@ -1,14 +1,10 @@
--- Create businesses table
-CREATE TABLE IF NOT EXISTS businesses (
+-- +migrate Up
+CREATE TABLE businesses (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     latitude DECIMAL(10, 8) NOT NULL,
     longitude DECIMAL(11, 8) NOT NULL,
     category VARCHAR(100) NOT NULL,
-    street_address VARCHAR(255),
-    city VARCHAR(100),
-    state VARCHAR(2),
-    zip_code VARCHAR(10),
     phone VARCHAR(20),
     url VARCHAR(500),
     is_active BOOLEAN DEFAULT true,
@@ -17,14 +13,10 @@ CREATE TABLE IF NOT EXISTS businesses (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create index for location-based queries
-CREATE INDEX IF NOT EXISTS idx_businesses_location ON businesses(latitude, longitude);
-
--- Create index for active businesses
-CREATE INDEX IF NOT EXISTS idx_businesses_active ON businesses(is_active);
-
--- Create index for category filtering
-CREATE INDEX IF NOT EXISTS idx_businesses_category ON businesses(category);
+-- Create indexes
+CREATE INDEX idx_businesses_location ON businesses(latitude, longitude);
+CREATE INDEX idx_businesses_active ON businesses(is_active);
+CREATE INDEX idx_businesses_category ON businesses(category);
 
 -- Update trigger for updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -37,3 +29,11 @@ $$ language 'plpgsql';
 
 CREATE TRIGGER update_businesses_updated_at BEFORE UPDATE
     ON businesses FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- +migrate Down
+DROP TRIGGER IF EXISTS update_businesses_updated_at ON businesses;
+DROP FUNCTION IF EXISTS update_updated_at_column();
+DROP INDEX IF EXISTS idx_businesses_category;
+DROP INDEX IF EXISTS idx_businesses_active;
+DROP INDEX IF EXISTS idx_businesses_location;
+DROP TABLE IF EXISTS businesses;

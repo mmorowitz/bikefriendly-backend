@@ -20,12 +20,16 @@ async function importCSV(filePath) {
     fs.createReadStream(filePath)
       .pipe(csv())
       .on('data', (row) => {
-        // Expected CSV columns: name, latitude, longitude, category, phone, url, is_sponsored
+        // Expected CSV columns: name, latitude, longitude, category, street_address, city, state, zip_code, phone, url, is_sponsored
         businesses.push({
           name: row.name?.trim(),
           latitude: parseFloat(row.latitude),
           longitude: parseFloat(row.longitude),
           category: row.category?.trim(),
+          street_address: row.street_address?.trim() || null,
+          city: row.city?.trim() || null,
+          state: row.state?.trim() || null,
+          zip_code: row.zip_code?.trim() || null,
           phone: row.phone?.trim() || null,
           url: row.url?.trim() || null,
           is_sponsored: row.is_sponsored === 'true' || row.is_sponsored === '1'
@@ -48,9 +52,9 @@ async function importCSV(filePath) {
             
             try {
               await pool.query(
-                `INSERT INTO businesses (name, latitude, longitude, category, phone, url, is_sponsored) 
-                 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-                [business.name, business.latitude, business.longitude, business.category, business.phone, business.url, business.is_sponsored]
+                `INSERT INTO businesses (name, latitude, longitude, category, street_address, city, state, zip_code, phone, url, is_sponsored) 
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+                [business.name, business.latitude, business.longitude, business.category, business.street_address, business.city, business.state, business.zip_code, business.phone, business.url, business.is_sponsored]
               );
               insertCount++;
             } catch (error) {

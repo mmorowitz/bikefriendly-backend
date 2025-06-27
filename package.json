@@ -7,7 +7,11 @@
     "start": "node server.js",
     "dev": "node server.js",
     "import": "node scripts/import-csv.js",
-    "migrate": "node scripts/migrate.js",
+    "migrate": "node scripts/migrate.js up",
+    "migrate:rollback": "node scripts/migrate.js down",
+    "migrate:status": "node scripts/migrate.js status",
+    "migrate:create": "node scripts/create-migration.js",
+    "deploy": "node scripts/deploy.js",
     "test": "jest"
   },
   "keywords": [

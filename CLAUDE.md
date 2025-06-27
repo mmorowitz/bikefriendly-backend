@@ -16,6 +16,10 @@ Single `businesses` table:
 - `latitude` (decimal)
 - `longitude` (decimal) 
 - `category` (string)
+- `street_address` (string, optional) - Street number and name
+- `city` (string, optional) - City name
+- `state` (string, optional) - Two-letter state code
+- `zip_code` (string, optional) - ZIP or ZIP+4 format
 - `phone` (string, optional)
 - `url` (string, optional)
 - `is_active` (boolean) - for publish/unpublish
@@ -35,9 +39,16 @@ Single `businesses` table:
 - **Validation**: Input sanitization for query parameters
 
 ## Data Management
-- CSV import script for bulk data updates
-- Direct PostgreSQL access for manual edits
-- Business data should be version-controlled as CSV files
+- **Migrations**: Versioned database schema changes using custom migration system
+- **CSV import**: Bulk data updates via `npm run import <csv-file>`
+- **Direct PostgreSQL access**: Manual edits when needed
+- **Business data**: Should be version-controlled as CSV files
+
+### Migration Commands
+- `npm run migrate` - Run pending migrations
+- `npm run migrate:rollback [steps]` - Rollback migrations (default: 1 step)
+- `npm run migrate:status` - Show migration status
+- `npm run migrate:create <name>` - Create new migration file
 
 ## Dependencies
 - express
