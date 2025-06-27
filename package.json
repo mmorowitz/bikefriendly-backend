@@ -12,7 +12,6 @@
     "migrate:status": "node scripts/migrate.js status",
     "migrate:create": "node scripts/create-migration.js",
     "deploy": "node scripts/deploy.js",
-    "migrate:init": "node scripts/mark-initial-migration.js",
     "test": "jest"
   },
   "keywords": [
