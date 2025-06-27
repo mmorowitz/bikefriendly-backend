@@ -159,7 +159,7 @@ app.get('/api/businesses/:id', cacheMiddleware, async (req, res) => {
 });
 
 // 404 handler for undefined routes
-app.use('*', (_, res) => {
+app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
