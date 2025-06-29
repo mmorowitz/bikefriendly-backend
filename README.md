@@ -45,6 +45,18 @@ createdb bikefriendly_dev
 psql bikefriendly_dev -f schema.sql
 ```
 
+#### Option C: Using Postgres.app (macOS)
+```bash
+# Start PostgreSQL server
+pg_ctl -D ~/Library/Application\ Support/Postgres/var-17 start
+
+# Stop PostgreSQL server
+pg_ctl -D ~/Library/Application\ Support/Postgres/var-17 stop
+
+# Create database
+createdb bikefriendly_dev
+```
+
 #### Option B: Using Docker
 ```bash
 # Run PostgreSQL in Docker
