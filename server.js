@@ -8,6 +8,24 @@ const { Pool } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Enhanced error logging
+console.log('=== SERVER STARTUP ===');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('PORT:', PORT);
+console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
+console.log('ALLOWED_ORIGINS:', process.env.ALLOWED_ORIGINS);
+
+// Global error handlers
+process.on('uncaughtException', (error) => {
+  console.error('UNCAUGHT EXCEPTION:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('UNHANDLED REJECTION at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
 // Initialize cache (5 minute TTL)
 const cache = new NodeCache({ stdTTL: 300 });
 
@@ -15,6 +33,26 @@ const cache = new NodeCache({ stdTTL: 300 });
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
+
+// Test database connection on startup
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error('=== DATABASE CONNECTION FAILED ===');
+    console.error('Error acquiring client:', err.stack);
+    process.exit(1);
+  } else {
+    console.log('=== DATABASE CONNECTED ===');
+    client.query('SELECT NOW()', (err, result) => {
+      release();
+      if (err) {
+        console.error('Database query test failed:', err.stack);
+        process.exit(1);
+      } else {
+        console.log('Database query test successful:', result.rows[0]);
+      }
+    });
+  }
 });
 
 // Rate limiting
@@ -192,7 +230,11 @@ app.use((req, res) => {
 
 // Start server
 app.listen(PORT, () => {
+  console.log(`=== SERVER STARTED ===`);
   console.log(`Server running on port ${PORT}`);
+  console.log(`Health check: http://localhost:${PORT}/health`);
+  console.log(`API endpoint: http://localhost:${PORT}/api/businesses`);
+  console.log('=== SERVER READY ===');
 });
 
 module.exports = app;
