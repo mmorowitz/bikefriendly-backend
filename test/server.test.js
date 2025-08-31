@@ -22,7 +22,8 @@ const mockBusinesses = [
     name: 'Bike Shop A',
     latitude: 41.8781,
     longitude: -87.6298,
-    category: 'repair',
+    category_id: 1,
+    category_name: 'repair',
     phone: '555-0001',
     url: 'https://bikeshopa.com',
     is_active: true,
@@ -35,11 +36,29 @@ const mockBusinesses = [
     name: 'Cafe B',
     latitude: 41.8801,
     longitude: -87.6301,
-    category: 'food',
+    category_id: 2,
+    category_name: 'food',
     phone: '555-0002',
     url: 'https://cafeb.com',
     is_active: true,
     is_sponsored: true,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z'
+  }
+];
+
+const mockCategories = [
+  {
+    id: 1,
+    name: 'repair',
+    description: 'Bike repair shops',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: 2,
+    name: 'food',
+    description: 'Food and beverages',
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z'
   }
@@ -80,7 +99,7 @@ describe('Server Endpoints', () => {
       expect(mockPool.query).toHaveBeenCalledTimes(2);
     });
 
-    it('should filter businesses by category', async () => {
+    it('should filter businesses by category name', async () => {
       const filteredBusinesses = [mockBusinesses[0]];
       mockPool.query
         .mockResolvedValueOnce({ rows: filteredBusinesses })
@@ -91,11 +110,30 @@ describe('Server Endpoints', () => {
         .expect(200);
 
       expect(response.body.businesses).toHaveLength(1);
-      expect(response.body.businesses[0].category).toBe('repair');
+      expect(response.body.businesses[0].category_name).toBe('repair');
       expect(response.body.total).toBe(1);
       expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('category = $'),
+        expect.stringContaining('c.name = $'),
         expect.arrayContaining(['repair'])
+      );
+    });
+
+    it('should filter businesses by category ID', async () => {
+      const filteredBusinesses = [mockBusinesses[0]];
+      mockPool.query
+        .mockResolvedValueOnce({ rows: filteredBusinesses })
+        .mockResolvedValueOnce({ rows: [{ count: '1' }] });
+
+      const response = await request(app)
+        .get('/api/businesses?category=1')
+        .expect(200);
+
+      expect(response.body.businesses).toHaveLength(1);
+      expect(response.body.businesses[0].category_id).toBe(1);
+      expect(response.body.total).toBe(1);
+      expect(mockPool.query).toHaveBeenCalledWith(
+        expect.stringContaining('b.category_id = $'),
+        expect.arrayContaining([1])
       );
     });
 
@@ -211,6 +249,46 @@ describe('Server Endpoints', () => {
     });
   });
 
+  describe('GET /api/categories', () => {
+    it('should return all categories', async () => {
+      mockPool.query.mockResolvedValueOnce({ rows: mockCategories });
+
+      const response = await request(app)
+        .get('/api/categories')
+        .expect(200);
+
+      expect(response.body).toEqual(mockCategories);
+      expect(response.body).toHaveLength(2);
+      expect(response.body[0]).toHaveProperty('id');
+      expect(response.body[0]).toHaveProperty('name');
+      expect(response.body[0]).toHaveProperty('description');
+      expect(mockPool.query).toHaveBeenCalledWith(
+        'SELECT * FROM categories ORDER BY name'
+      );
+    });
+
+    it('should handle database errors', async () => {
+      mockPool.query.mockRejectedValueOnce(new Error('Database connection failed'));
+
+      const response = await request(app)
+        .get('/api/categories')
+        .expect(500);
+
+      expect(response.body).toHaveProperty('error', 'Internal server error');
+    });
+
+    it('should handle empty categories list', async () => {
+      mockPool.query.mockResolvedValueOnce({ rows: [] });
+
+      const response = await request(app)
+        .get('/api/categories')
+        .expect(200);
+
+      expect(response.body).toEqual([]);
+      expect(response.body).toHaveLength(0);
+    });
+  });
+
   describe('GET /api/businesses/:id', () => {
     it('should return a single business by id', async () => {
       mockPool.query.mockResolvedValueOnce({ rows: [mockBusinesses[0]] });
@@ -221,7 +299,7 @@ describe('Server Endpoints', () => {
 
       expect(response.body).toEqual(mockBusinesses[0]);
       expect(mockPool.query).toHaveBeenCalledWith(
-        'SELECT * FROM businesses WHERE id = $1 AND is_active = true',
+        expect.stringContaining('SELECT b.*, c.name as category_name'),
         ['1']
       );
     });
@@ -323,7 +401,7 @@ describe('Server Endpoints', () => {
       expect(response.body.limit).toBe(10);
       expect(response.body.offset).toBe(5);
       expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('category = $'),
+        expect.stringContaining('c.name = $'),
         expect.arrayContaining(['repair', 10, 5])
       );
     });
@@ -336,7 +414,7 @@ describe('Server Endpoints', () => {
         .expect(200);
 
       expect(mockPool.query).toHaveBeenCalledWith(
-        'SELECT * FROM businesses WHERE id = $1 AND is_active = true',
+        expect.stringContaining('SELECT b.*, c.name as category_name'),
         ['abc']
       );
     });

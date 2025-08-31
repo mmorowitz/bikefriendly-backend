@@ -1,0 +1,4 @@
+name,latitude,longitude,category,street_address,city,state,zip_code,phone,url,is_sponsored
+Bike Shop Chicago,41.8781,-87.6298,bike_shop,123 Main St,Chicago,IL,60601,312-555-0123,https://bikeshop.com,false
+Cycle Repair Center,41.8851,-87.6237,bike_repair,456 Oak Ave,Chicago,IL,60602,312-555-0124,https://repairs.com,true
+City Bikes,41.8921,-87.6357,bike_rental,789 Pine St,Chicago,IL,60603,312-555-0125,,false

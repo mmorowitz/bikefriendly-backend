@@ -72,7 +72,12 @@ app.get('/api/businesses', cacheMiddleware, async (req, res) => {
       offset = 0 
     } = req.query;
 
-    let query = 'SELECT * FROM businesses WHERE is_active = true';
+    let query = `
+      SELECT b.*, c.name as category_name 
+      FROM businesses b 
+      LEFT JOIN categories c ON b.category_id = c.id 
+      WHERE b.is_active = true
+    `;
     const params = [];
     let paramCount = 0;
 
@@ -80,8 +85,8 @@ app.get('/api/businesses', cacheMiddleware, async (req, res) => {
     if (bounds) {
       const [swLat, swLng, neLat, neLng] = bounds.split(',').map(Number);
       if (swLat && swLng && neLat && neLng) {
-        query += ` AND latitude BETWEEN $${++paramCount} AND $${++paramCount}`;
-        query += ` AND longitude BETWEEN $${++paramCount} AND $${++paramCount}`;
+        query += ` AND b.latitude BETWEEN $${++paramCount} AND $${++paramCount}`;
+        query += ` AND b.longitude BETWEEN $${++paramCount} AND $${++paramCount}`;
         params.push(swLat, neLat, swLng, neLng);
       }
     }
@@ -95,23 +100,29 @@ app.get('/api/businesses', cacheMiddleware, async (req, res) => {
         // Using Haversine formula approximation for radius filtering
         query += ` AND (
           6371 * acos(
-            cos(radians($${++paramCount})) * cos(radians(latitude)) * 
-            cos(radians(longitude) - radians($${++paramCount})) + 
-            sin(radians($${++paramCount})) * sin(radians(latitude))
+            cos(radians($${++paramCount})) * cos(radians(b.latitude)) * 
+            cos(radians(b.longitude) - radians($${++paramCount})) + 
+            sin(radians($${++paramCount})) * sin(radians(b.latitude))
           )
         ) <= $${++paramCount}`;
         params.push(latNum, lngNum, latNum, radiusNum);
       }
     }
 
-    // Category filtering
+    // Category filtering - can filter by category name or ID
     if (category) {
-      query += ` AND category = $${++paramCount}`;
-      params.push(category);
+      // Check if category is numeric (ID) or string (name)
+      if (/^\d+$/.test(category)) {
+        query += ` AND b.category_id = $${++paramCount}`;
+        params.push(parseInt(category));
+      } else {
+        query += ` AND c.name = $${++paramCount}`;
+        params.push(category);
+      }
     }
 
     // Ordering and pagination
-    query += ' ORDER BY name';
+    query += ' ORDER BY b.name';
     
     const limitNum = Math.min(parseInt(limit) || 1000, 1000); // Cap at 1000
     const offsetNum = parseInt(offset) || 0;
@@ -122,8 +133,8 @@ app.get('/api/businesses', cacheMiddleware, async (req, res) => {
     const result = await pool.query(query, params);
     
     // Include metadata for pagination
-    const countQuery = query.replace(/SELECT \*/, 'SELECT COUNT(*)')
-                           .replace(/ORDER BY name.*$/, '');
+    const countQuery = query.replace(/SELECT b\.\*, c\.name as category_name/, 'SELECT COUNT(*)')
+                           .replace(/ORDER BY b\.name.*$/, '');
     const countResult = await pool.query(countQuery, params.slice(0, -2));
     
     res.json({
@@ -142,10 +153,12 @@ app.get('/api/businesses', cacheMiddleware, async (req, res) => {
 app.get('/api/businesses/:id', cacheMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await pool.query(
-      'SELECT * FROM businesses WHERE id = $1 AND is_active = true',
-      [id]
-    );
+    const result = await pool.query(`
+      SELECT b.*, c.name as category_name 
+      FROM businesses b 
+      LEFT JOIN categories c ON b.category_id = c.id 
+      WHERE b.id = $1 AND b.is_active = true
+    `, [id]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Business not found' });
@@ -154,6 +167,20 @@ app.get('/api/businesses/:id', cacheMiddleware, async (req, res) => {
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error fetching business:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get all categories
+app.get('/api/categories', cacheMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM categories ORDER BY name'
+    );
+    
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching categories:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

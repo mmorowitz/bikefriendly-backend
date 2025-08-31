@@ -39,6 +39,21 @@ async function importCSV(filePath) {
         try {
           console.log(`Parsed ${businesses.length} businesses from CSV`);
           
+          // First, ensure all categories exist in the categories table
+          const categoryNames = [...new Set(businesses.map(b => b.category).filter(Boolean))];
+          console.log(`Found ${categoryNames.length} unique categories`);
+          
+          for (const categoryName of categoryNames) {
+            try {
+              await pool.query(
+                'INSERT INTO categories (name, description) VALUES ($1, $2) ON CONFLICT (name) DO NOTHING',
+                [categoryName, 'Imported from CSV data']
+              );
+            } catch (error) {
+              console.error(`Error creating category ${categoryName}:`, error.message);
+            }
+          }
+          
           // Clear existing data (optional - remove if you want to append)
           // await pool.query('DELETE FROM businesses');
           
@@ -51,10 +66,23 @@ async function importCSV(filePath) {
             }
             
             try {
+              // Get category_id for the category name
+              const categoryResult = await pool.query(
+                'SELECT id FROM categories WHERE name = $1',
+                [business.category]
+              );
+              
+              if (categoryResult.rows.length === 0) {
+                console.warn(`Category not found for business ${business.name}: ${business.category}`);
+                continue;
+              }
+              
+              const categoryId = categoryResult.rows[0].id;
+              
               await pool.query(
-                `INSERT INTO businesses (name, latitude, longitude, category, street_address, city, state, zip_code, phone, url, is_sponsored) 
+                `INSERT INTO businesses (name, latitude, longitude, category_id, street_address, city, state, zip_code, phone, url, is_sponsored) 
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-                [business.name, business.latitude, business.longitude, business.category, business.street_address, business.city, business.state, business.zip_code, business.phone, business.url, business.is_sponsored]
+                [business.name, business.latitude, business.longitude, categoryId, business.street_address, business.city, business.state, business.zip_code, business.phone, business.url, business.is_sponsored]
               );
               insertCount++;
             } catch (error) {
