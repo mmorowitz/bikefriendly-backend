@@ -200,9 +200,6 @@ const initAdmin = async () => {
   }
 };
 
-// Initialize AdminJS
-initAdmin();
-
 // Health check endpoint
 app.get("/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
@@ -342,12 +339,19 @@ app.use((req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`=== SERVER STARTED ===`);
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Health check: http://localhost:${PORT}/health`);
-  console.log(`API endpoint: http://localhost:${PORT}/api/businesses`);
-  console.log("=== SERVER READY ===");
-});
+const startServer = async () => {
+  // Initialize AdminJS before starting server
+  await initAdmin();
+
+  app.listen(PORT, () => {
+    console.log(`=== SERVER STARTED ===`);
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Health check: http://localhost:${PORT}/health`);
+    console.log(`API endpoint: http://localhost:${PORT}/api/businesses`);
+    console.log("=== SERVER READY ===");
+  });
+};
+
+startServer();
 
 module.exports = app;
