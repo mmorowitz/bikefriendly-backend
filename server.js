@@ -176,8 +176,20 @@ const initAdmin = async () => {
       rootPath: "/admin",
     });
 
-    // Temporarily use basic router for debugging
-    const adminRouter = AdminJSExpress.default.buildRouter(admin);
+    const adminRouter = AdminJSExpress.default.buildAuthenticatedRouter(admin, {
+      authenticate: async (email, password) => {
+        const adminEmail = process.env.ADMIN_EMAIL || "admin@bikefriendly.com";
+        const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+
+        if (email === adminEmail && password === adminPassword) {
+          return { email: adminEmail, role: "admin" };
+        }
+        return null;
+      },
+      cookieName: "adminjs",
+      cookiePassword:
+        process.env.ADMIN_COOKIE_SECRET || "supersecretcookiepassword123456789",
+    });
     console.log("About to mount AdminJS at path:", admin.options.rootPath);
     console.log("AdminJS router type:", typeof adminRouter);
     app.use(admin.options.rootPath, adminRouter);
