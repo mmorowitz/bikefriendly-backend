@@ -178,7 +178,10 @@ const initAdmin = async () => {
 
     // Temporarily use basic router for debugging
     const adminRouter = AdminJSExpress.default.buildRouter(admin);
+    console.log("About to mount AdminJS at path:", admin.options.rootPath);
+    console.log("AdminJS router type:", typeof adminRouter);
     app.use(admin.options.rootPath, adminRouter);
+    console.log("AdminJS router mounted successfully");
 
     console.log(
       `AdminJS started on http://localhost:${PORT}${admin.options.rootPath}`,
@@ -321,15 +324,15 @@ app.get("/api/categories", cacheMiddleware, async (req, res) => {
   }
 });
 
-// 404 handler for undefined routes
-app.use((req, res) => {
-  res.status(404).json({ error: "Route not found" });
-});
-
 // Start server
 const startServer = async () => {
   // Initialize AdminJS before starting server
   await initAdmin();
+
+  // 404 handler for undefined routes (must be after AdminJS)
+  app.use((req, res) => {
+    res.status(404).json({ error: "Route not found" });
+  });
 
   app.listen(PORT, () => {
     console.log(`=== SERVER STARTED ===`);
