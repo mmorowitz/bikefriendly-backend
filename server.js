@@ -102,6 +102,17 @@ const cacheMiddleware = (req, res, next) => {
 // Initialize AdminJS
 const initAdmin = async () => {
   try {
+    console.log("AdminJS temporarily disabled for debugging");
+
+    // Simple admin endpoint for testing
+    app.get("/admin", (req, res) => {
+      res.json({
+        message: "Admin interface temporarily disabled",
+        status: "Server running normally",
+      });
+    });
+
+    /*
     // Dynamic import for ES module
     const AdminJSExpress = await import("@adminjs/express");
     const { db, AdminJS } = await initAdminJSDatabase();
@@ -205,6 +216,7 @@ const initAdmin = async () => {
     console.log(
       `AdminJS started on http://localhost:${PORT}${admin.options.rootPath}`,
     );
+    */
   } catch (error) {
     console.error("Failed to initialize AdminJS:", error);
   }
