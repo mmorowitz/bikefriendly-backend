@@ -102,22 +102,14 @@ const cacheMiddleware = (req, res, next) => {
 // Initialize AdminJS
 const initAdmin = async () => {
   try {
-    console.log("AdminJS temporarily disabled for debugging");
-
-    // Simple admin endpoint for testing
-    app.get("/admin", (req, res) => {
-      res.json({
-        message: "Admin interface temporarily disabled",
-        status: "Server running normally",
-      });
-    });
-
-    /*
     // Dynamic import for ES module
     const AdminJSExpress = await import("@adminjs/express");
     const { db, AdminJS } = await initAdminJSDatabase();
 
     const admin = new AdminJS({
+      bundler: {
+        bundleAdminJS: false, // Disable asset bundling to avoid static file issues
+      },
       branding: {
         companyName: "Bike Friendly",
         logo: false,
@@ -206,7 +198,34 @@ const initAdmin = async () => {
       rootPath: "/admin",
     });
 
-    const adminRouter = AdminJSExpress.default.buildRouter(admin);
+    // Use the simpler router setup to avoid static asset issues
+    const adminRouter = AdminJSExpress.default.buildAuthenticatedRouter(
+      admin,
+      {
+        authenticate: async (email, password) => {
+          const adminEmail =
+            process.env.ADMIN_EMAIL || "admin@bikefriendly.com";
+          const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+
+          if (email === adminEmail && password === adminPassword) {
+            return { email: adminEmail, role: "admin" };
+          }
+          return null;
+        },
+        cookieName: "adminjs",
+        cookiePassword:
+          process.env.ADMIN_COOKIE_SECRET ||
+          "supersecretcookiepassword123456789",
+      },
+      null,
+      {
+        resave: false,
+        saveUninitialized: true,
+        secret:
+          process.env.ADMIN_COOKIE_SECRET ||
+          "supersecretcookiepassword123456789",
+      },
+    );
 
     console.log("About to mount AdminJS at path:", admin.options.rootPath);
     console.log("AdminJS router type:", typeof adminRouter);
@@ -216,7 +235,6 @@ const initAdmin = async () => {
     console.log(
       `AdminJS started on http://localhost:${PORT}${admin.options.rootPath}`,
     );
-    */
   } catch (error) {
     console.error("Failed to initialize AdminJS:", error);
   }
