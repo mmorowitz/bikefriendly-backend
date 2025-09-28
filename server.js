@@ -109,6 +109,13 @@ const initAdmin = async () => {
     const AdminJSExpress = await import("@adminjs/express");
     const { db, AdminJS } = await initAdminJSDatabase();
 
+    // Debug: Check what properties AdminJS detects from the database
+    const businessesTable = db.table("businesses");
+    console.log(
+      "Available business table properties:",
+      Object.keys(businessesTable.properties()),
+    );
+
     const admin = new AdminJS({
       componentLoader,
       branding: {
@@ -118,7 +125,7 @@ const initAdmin = async () => {
       },
       resources: [
         {
-          resource: db.table("businesses"),
+          resource: businessesTable,
           options: {
             listProperties: [
               "id",
