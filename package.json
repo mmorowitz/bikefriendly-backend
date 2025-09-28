@@ -2,10 +2,13 @@
   "name": "bikefriendly-backend",
   "version": "1.0.0",
   "description": "Backend API for Chicago Bike-Friendly Business Map",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
+    "build": "npm run build:admin",
+    "build:admin": "node bundler.js",
     "import": "node scripts/import-csv.js",
     "migrate": "node scripts/migrate.js up",
     "migrate:rollback": "node scripts/migrate.js down",
@@ -24,6 +27,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@adminjs/bundler": "^3.0.0",
     "@adminjs/express": "^6.1.1",
     "@adminjs/sql": "^2.2.6",
     "adminjs": "^7.8.17",

@@ -1,5 +1,5 @@
 // Initialize database connection for AdminJS
-const initAdminJSDatabase = async () => {
+export const initAdminJSDatabase = async () => {
   // Dynamic imports for ES modules
   const AdminJS = (await import("adminjs")).default;
   const { Adapter, Database, Resource } = await import("@adminjs/sql");
@@ -19,8 +19,4 @@ const initAdminJSDatabase = async () => {
   }).init();
 
   return { db, AdminJS };
-};
-
-module.exports = {
-  initAdminJSDatabase,
 };

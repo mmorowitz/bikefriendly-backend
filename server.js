@@ -1,11 +1,14 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const rateLimit = require("express-rate-limit");
-const NodeCache = require("node-cache");
-const { Pool } = require("pg");
-// AdminJSExpress will be dynamically imported due to ES module
-const { initAdminJSDatabase } = require("./models/adminjs");
+import dotenv from "dotenv";
+dotenv.config();
+
+import express from "express";
+import cors from "cors";
+import rateLimit from "express-rate-limit";
+import NodeCache from "node-cache";
+import pkg from "pg";
+const { Pool } = pkg;
+import { initAdminJSDatabase } from "./models/adminjs.js";
+import componentLoader from "./component-loader.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -107,9 +110,7 @@ const initAdmin = async () => {
     const { db, AdminJS } = await initAdminJSDatabase();
 
     const admin = new AdminJS({
-      bundler: {
-        bundleAdminJS: false, // Disable asset bundling to avoid static file issues
-      },
+      componentLoader,
       branding: {
         companyName: "Bike Friendly",
         logo: false,
@@ -226,6 +227,9 @@ const initAdmin = async () => {
           "supersecretcookiepassword123456789",
       },
     );
+
+    // Serve bundled AdminJS assets
+    app.use("/admin/frontend/assets", express.static("./.adminjs"));
 
     console.log("About to mount AdminJS at path:", admin.options.rootPath);
     console.log("AdminJS router type:", typeof adminRouter);
