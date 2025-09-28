@@ -5,15 +5,54 @@ This is the backend API for a website that displays bicycle-friendly businesses 
 ## Architecture
 
 - **Framework**: Node.js with Express
-- **Database**: PostgreSQL
-- **Authentication**: None (read-only public API)
-- **Protection**: Rate limiting + CORS + response caching
+- **Database**: PostgreSQL  
+- **Authentication**: AdminJS with HTTP Basic Auth (admin only)
+- **Protection**: Rate limiting + CORS + response caching + security headers
 
 ## API Endpoints
 
 - `GET /api/businesses` - Return all active businesses with optional filtering
 - `GET /api/businesses/:id` - Return single business
 - `GET /health` - Health check endpoint
+- `GET /admin` - AdminJS interface (authenticated access only)
+
+## Security
+
+### Required Environment Variables for Production
+
+**⚠️ CRITICAL: These environment variables MUST be set for production deployment:**
+
+```bash
+# Admin Authentication (REQUIRED)
+ADMIN_EMAIL=your-secure-admin-email@domain.com
+ADMIN_PASSWORD=your-very-strong-password-minimum-12-characters
+ADMIN_COOKIE_SECRET=your-random-secret-key-minimum-32-characters
+
+# Database (REQUIRED)
+DATABASE_URL=postgresql://user:password@host:port/database
+
+# Optional but Recommended
+ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+NODE_ENV=production
+```
+
+### Security Features
+
+- **Authentication**: AdminJS protected with HTTP Basic Auth
+- **HTTPS Enforcement**: Admin routes require HTTPS in production
+- **Security Headers**: X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, etc.
+- **Rate Limiting**: 100 requests/hour per IP
+- **CORS Protection**: Configurable allowed origins
+- **Input Validation**: SQL injection protection via parameterized queries
+- **Environment Validation**: Server refuses to start with weak credentials in production
+
+### Security Best Practices
+
+1. **Strong Passwords**: Admin password must be 12+ characters in production
+2. **Unique Secrets**: Generate unique values for `ADMIN_COOKIE_SECRET`
+3. **HTTPS Only**: Always use HTTPS for admin access in production
+4. **Limited Access**: Restrict admin access to trusted IPs if possible
+5. **Regular Updates**: Keep dependencies updated for security patches
 
 ## Development Setup
 

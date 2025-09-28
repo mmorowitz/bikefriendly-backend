@@ -20,6 +20,28 @@ console.log("PORT:", PORT);
 console.log("DATABASE_URL exists:", !!process.env.DATABASE_URL);
 console.log("ALLOWED_ORIGINS:", process.env.ALLOWED_ORIGINS);
 
+// Security validation
+if (process.env.NODE_ENV === "production") {
+  if (
+    !process.env.ADMIN_EMAIL ||
+    !process.env.ADMIN_PASSWORD ||
+    !process.env.ADMIN_COOKIE_SECRET
+  ) {
+    console.error(
+      "SECURITY ERROR: Required admin environment variables are not set in production",
+    );
+    process.exit(1);
+  }
+
+  if (
+    process.env.ADMIN_PASSWORD === "admin123" ||
+    process.env.ADMIN_PASSWORD?.length < 12
+  ) {
+    console.error("SECURITY ERROR: Admin password is too weak for production");
+    process.exit(1);
+  }
+}
+
 // Global error handlers
 process.on("uncaughtException", (error) => {
   console.error("UNCAUGHT EXCEPTION:", error);
@@ -238,9 +260,15 @@ const initAdmin = async () => {
       admin,
       {
         authenticate: async (email, password) => {
-          const adminEmail =
-            process.env.ADMIN_EMAIL || "admin@bikefriendly.com";
-          const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+          const adminEmail = process.env.ADMIN_EMAIL;
+          const adminPassword = process.env.ADMIN_PASSWORD;
+
+          if (!adminEmail || !adminPassword) {
+            console.error(
+              "ADMIN_EMAIL and ADMIN_PASSWORD environment variables must be set",
+            );
+            return null;
+          }
 
           if (email === adminEmail && password === adminPassword) {
             return { email: adminEmail, role: "admin" };
@@ -248,17 +276,13 @@ const initAdmin = async () => {
           return null;
         },
         cookieName: "adminjs",
-        cookiePassword:
-          process.env.ADMIN_COOKIE_SECRET ||
-          "supersecretcookiepassword123456789",
+        cookiePassword: process.env.ADMIN_COOKIE_SECRET,
       },
       null,
       {
         resave: false,
         saveUninitialized: true,
-        secret:
-          process.env.ADMIN_COOKIE_SECRET ||
-          "supersecretcookiepassword123456789",
+        secret: process.env.ADMIN_COOKIE_SECRET,
       },
     );
 
@@ -283,42 +307,7 @@ app.get("/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
-// Debug endpoint to test direct database insertion
-app.post("/debug/test-insert", async (req, res) => {
-  try {
-    const result = await pool.query(
-      `INSERT INTO businesses (name, latitude, longitude, is_active)
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      ["Test Business", 41.8781, -87.6298, true],
-    );
-    res.json({ success: true, business: result.rows[0] });
-  } catch (error) {
-    console.error("Direct insert error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Debug endpoint to check sequence state
-app.get("/debug/sequence-info", async (req, res) => {
-  try {
-    const maxId = await pool.query("SELECT MAX(id) as max_id FROM businesses");
-    const seqInfo = await pool.query(
-      "SELECT last_value, is_called FROM businesses_id_seq",
-    );
-    const nextVal = await pool.query(
-      "SELECT nextval('businesses_id_seq') as next_val",
-    );
-
-    res.json({
-      maxId: maxId.rows[0].max_id,
-      sequenceLastValue: seqInfo.rows[0].last_value,
-      sequenceIsCalled: seqInfo.rows[0].is_called,
-      nextSequenceValue: nextVal.rows[0].next_val,
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+// Debug endpoints removed for security in production
 
 // Get all active businesses with optional filtering
 app.get("/api/businesses", cacheMiddleware, async (req, res) => {
