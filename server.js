@@ -158,6 +158,20 @@ const initAdmin = async () => {
               "is_active",
               "is_sponsored",
             ],
+            newProperties: [
+              "name",
+              "latitude",
+              "longitude",
+              "category_id",
+              "street_address",
+              "city",
+              "state",
+              "zip_code",
+              "phone",
+              "url",
+              "is_active",
+              "is_sponsored",
+            ],
             filterProperties: [
               "name",
               "category_id",
@@ -171,11 +185,31 @@ const initAdmin = async () => {
                   show: true,
                   edit: false,
                   filter: false,
+                  new: false,
                 },
+                isId: true,
               },
               category_id: {
                 reference: "categories",
                 type: "reference",
+              },
+            },
+            actions: {
+              new: {
+                before: async (request) => {
+                  // Debug: Log the request payload to see what fields are being sent
+                  console.log(
+                    "AdminJS new business request payload:",
+                    request.payload,
+                  );
+
+                  // Remove id from payload if present
+                  if (request.payload && request.payload.id) {
+                    console.log("Removing id field from payload");
+                    delete request.payload.id;
+                  }
+                  return request;
+                },
               },
             },
           },
