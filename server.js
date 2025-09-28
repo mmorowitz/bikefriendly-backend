@@ -155,6 +155,20 @@ const initAdmin = async () => {
               "is_active",
               "is_sponsored",
             ],
+            properties: {
+              id: {
+                isVisible: {
+                  list: true,
+                  show: true,
+                  edit: false,
+                  filter: false,
+                },
+              },
+              category_id: {
+                reference: "categories",
+                type: "reference",
+              },
+            },
           },
         },
         {
