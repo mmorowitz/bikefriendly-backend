@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 
-const { MigrationRunner } = require('./migrate');
+import { MigrationRunner } from "./migrate.js";
 
 async function deploy() {
-  console.log('🚀 Starting deployment...');
-  
+  console.log("🚀 Starting deployment...");
+
   try {
     // Run migrations
-    console.log('📦 Running database migrations...');
+    console.log("📦 Running database migrations...");
     const runner = new MigrationRunner();
     await runner.migrate();
-    
-    console.log('✅ Deployment completed successfully!');
+
+    console.log("✅ Deployment completed successfully!");
     process.exit(0);
   } catch (error) {
-    console.error('❌ Deployment failed:', error.message);
+    console.error("❌ Deployment failed:", error.message);
     process.exit(1);
   }
 }

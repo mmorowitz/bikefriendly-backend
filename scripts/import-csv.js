@@ -1,7 +1,9 @@
-require("dotenv").config();
-const fs = require("fs");
-const csv = require("csv-parser");
-const { Pool } = require("pg");
+import dotenv from "dotenv";
+dotenv.config();
+import fs from "fs";
+import csv from "csv-parser";
+import pkg from "pg";
+const { Pool } = pkg;
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
