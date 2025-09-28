@@ -283,6 +283,43 @@ app.get("/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
+// Debug endpoint to test direct database insertion
+app.post("/debug/test-insert", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `INSERT INTO businesses (name, latitude, longitude, is_active)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      ["Test Business", 41.8781, -87.6298, true],
+    );
+    res.json({ success: true, business: result.rows[0] });
+  } catch (error) {
+    console.error("Direct insert error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Debug endpoint to check sequence state
+app.get("/debug/sequence-info", async (req, res) => {
+  try {
+    const maxId = await pool.query("SELECT MAX(id) as max_id FROM businesses");
+    const seqInfo = await pool.query(
+      "SELECT last_value, is_called FROM businesses_id_seq",
+    );
+    const nextVal = await pool.query(
+      "SELECT nextval('businesses_id_seq') as next_val",
+    );
+
+    res.json({
+      maxId: maxId.rows[0].max_id,
+      sequenceLastValue: seqInfo.rows[0].last_value,
+      sequenceIsCalled: seqInfo.rows[0].is_called,
+      nextSequenceValue: nextVal.rows[0].next_val,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get all active businesses with optional filtering
 app.get("/api/businesses", cacheMiddleware, async (req, res) => {
   try {
